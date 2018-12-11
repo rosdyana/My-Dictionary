@@ -9,11 +9,15 @@
     </item>
     <item
         android:bottom="0dp"
-        android:left="-50dp"
-        android:right="-50dp"
-        android:top="-70dp">
+        android:left="-150dp"
+        android:right="-150dp"
+        android:top="-250dp">
         <shape android:shape="oval">
-            <solid android:color="@color/colorPrimaryDark" />
+            <gradient
+                android:endColor="#00c6fb"
+                android:startColor="#005bea"
+                android:angle="45"
+                android:type="linear"/>
         </shape>
     </item>
 </layer-list>

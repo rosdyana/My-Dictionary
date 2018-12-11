@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018. Rosdyana Kusuma.
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/id_to_en_item"
+            android:title="@string/id_to_en_text" />
+        <item
+            android:id="@+id/en_to_id_item"
+            android:title="@string/en_to_id_text" />
+    </group>
+
+    <item android:title="@string/more_text">
+        <menu>
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_bear"
+                android:title="@string/about_text" />
+        </menu>
+    </item>
+
+</menu>
