@@ -40,6 +40,7 @@ public class HomeActivity extends AppCompatActivity
     private DictionaryHelper dictionaryHelper;
     private ArrayList<DictionaryModel> dictionaryList = new ArrayList<>();
     private TranslateAdapter translateAdapter;
+    private static final String STATE_SAVE = "state_save";
 
     @BindView(R.id.searchBar)
     MaterialSearchBar searchBar;
@@ -96,6 +97,17 @@ public class HomeActivity extends AppCompatActivity
         translateAdapter = new TranslateAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(translateAdapter);
+
+        if (savedInstanceState != null) {
+            dictionaryList = savedInstanceState.getParcelableArrayList(STATE_SAVE);
+            translateAdapter.updateData(dictionaryList);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState (Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(STATE_SAVE,dictionaryList);
     }
 
     @Override
