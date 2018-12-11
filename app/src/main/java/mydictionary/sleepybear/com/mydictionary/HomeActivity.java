@@ -4,10 +4,11 @@
 
 package mydictionary.sleepybear.com.mydictionary;
 
+import android.database.SQLException;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.widget.SearchView;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -16,23 +17,28 @@ import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.mancj.materialsearchbar.MaterialSearchBar;
 
+import java.util.ArrayList;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import mydictionary.sleepybear.com.mydictionary.utils.ActivityBarUtil;
+import mydictionary.sleepybear.com.mydictionary.db.DictionaryHelper;
+import mydictionary.sleepybear.com.mydictionary.model.DictionaryModel;
+import mydictionary.sleepybear.com.mydictionary.utils.AppPreference;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, MaterialSearchBar.OnSearchActionListener {
-    private MaterialSearchBar searchView;
+    private AppPreference appPreference;
+    private DictionaryHelper dictionaryHelper;
+    private ArrayList<DictionaryModel> dictionaryList = new ArrayList<>();
+
+    @BindView(R.id.searchBar)
+    MaterialSearchBar searchBar;
     @BindView(R.id.drawer_layout)
     DrawerLayout drawerLayout;
     @BindView(R.id.fab)
@@ -46,7 +52,7 @@ public class HomeActivity extends AppCompatActivity
         setContentView(R.layout.activity_home);
         ButterKnife.bind(this);
 
-//        ActivityBarUtil.setStatusBarGradiant(HomeActivity.this, getResources().getDrawable(R.drawable.header_gradient_color));
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -57,19 +63,22 @@ public class HomeActivity extends AppCompatActivity
 
 
         navigationView.setNavigationItemSelectedListener(this);
-        searchView = (MaterialSearchBar) findViewById(R.id.searchBar);
-        searchView.setOnSearchActionListener(this);
-//        searchView.inflateMenu(R.layout.app_bar_home);
-        searchView.setCardViewElevation(10);
-        searchView.setRoundedSearchBarEnabled(true);
-        searchView.addTextChangeListener(new TextWatcher() {
+        navigationView.getMenu().getItem(0).setChecked(true);
+
+        // ID to EN item
+        appPreference = new AppPreference(this);
+        appPreference.setENtoID(false);
+
+        searchBar.setOnSearchActionListener(this);
+        searchBar.setCardViewElevation(10);
+        searchBar.addTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d("LOG_TAG", getClass().getSimpleName() + " text changed " + searchView.getText());
+                Log.d("LOG_TAG", getClass().getSimpleName() + " text changed " + searchBar.getText());
             }
 
             @Override
@@ -78,6 +87,8 @@ public class HomeActivity extends AppCompatActivity
             }
 
         });
+
+        dictionaryHelper = new DictionaryHelper(this);
     }
 
     @Override
@@ -88,28 +99,6 @@ public class HomeActivity extends AppCompatActivity
             super.onBackPressed();
         }
     }
-//
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.home, menu);
-//        return true;
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_search) {
-//
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -118,10 +107,15 @@ public class HomeActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.en_to_id_item) {
-
+            appPreference.setENtoID(true);
         } else if (id == R.id.id_to_en_item) {
-
+            appPreference.setENtoID(false);
         } else if (id == R.id.nav_about) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
+            builder.setMessage(R.string.dialog_about_content)
+                    .setTitle(R.string.dialog_about_title);
+            AlertDialog dialog = builder.create();
+            dialog.show();
 
         }
 
@@ -136,6 +130,26 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onSearchConfirmed(CharSequence text) {
+        Log.d("ROS", String.valueOf(text));
+        searchWord(String.valueOf(text));
+        searchBar.disableSearch();
+    }
+
+    private void searchWord(String text) {
+        try {
+            dictionaryHelper.open();
+            dictionaryList = dictionaryHelper.getValueByKeyword(text, appPreference.isENToID());
+        } catch (SQLException e){
+            e.printStackTrace();
+        } finally {
+            dictionaryHelper.close();
+        }
+        if(dictionaryList.size()>=1){
+            Log.d("ROS",dictionaryList.get(0).getValue());
+            Toast.makeText(HomeActivity.this,dictionaryList.get(0).getValue() ,Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(HomeActivity.this, getResources().getString(R.string.keyword_not_found, text),Toast.LENGTH_SHORT).show();
+        }
 
     }
 
@@ -148,7 +162,7 @@ public class HomeActivity extends AppCompatActivity
             case MaterialSearchBar.BUTTON_SPEECH:
                 break;
             case MaterialSearchBar.BUTTON_BACK:
-                searchView.disableSearch();
+                searchBar.disableSearch();
                 break;
         }
     }

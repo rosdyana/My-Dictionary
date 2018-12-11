@@ -13,10 +13,4 @@
     tools:context=".HomeActivity"
     tools:showIn="@layout/app_bar_home">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
-        android:text="APAAJA"
-        tools:text="APAAJA"/>
 </android.support.constraint.ConstraintLayout>

@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2018. Rosdyana Kusuma.
   -->
 <resources>
     <color name="colorPrimary">#72afd3</color>
     <color name="colorPrimaryDark">#005bea</color>
     <color name="colorAccent">#FFFFFF</color>
+
 </resources>
