@@ -9,7 +9,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 
 import java.util.ArrayList;
@@ -38,11 +37,8 @@ public class DictionaryHelper {
     public ArrayList<DictionaryModel> getValueByKeyword(String keyword, boolean isENtoID) {
         ArrayList<DictionaryModel> arrayList = new ArrayList<>();
         DictionaryModel dictionaryModel;
-        String DB_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
-        Cursor cursor = sqLiteDatabase.query(DB_NAME, null, DbContract.DictionaryColumns.COL_KEYWORD + " LIKE ?", new String[]{keyword}, null, null, DbContract.DictionaryColumns.COL_ID + " ASC", null);
-//        if(isENtoID){
-//            cursor = sqLiteDatabase.query(DbContract.TABLE_EN_ID,null,DbContract.DictionaryColumns.COL_KEYWORD+" LIKE ?",new String[]{keyword},null,null,DbContract.DictionaryColumns.COL_ID + " ASC",null);
-//        }
+        String TABLE_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
+        Cursor cursor = sqLiteDatabase.query(TABLE_NAME, null, DbContract.DictionaryColumns.COL_KEYWORD + " LIKE ?", new String[]{keyword}, null, null, DbContract.DictionaryColumns.COL_ID + " ASC", null);
 
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
@@ -62,25 +58,20 @@ public class DictionaryHelper {
     }
 
     public ArrayList<DictionaryModel> getAllData(boolean isENtoID) {
-        String DB_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
-        Cursor cursor = sqLiteDatabase.query(DB_NAME, null, null, null, null, null, DbContract.DictionaryColumns.COL_ID + " ASC", null);
-//        if(isENtoID){
-//            cursor = sqLiteDatabase.query(DbContract.TABLE_EN_ID,null,null,null,null,null,DbContract.DictionaryColumns.COL_ID+ " ASC",null);
-//        }
-        cursor.moveToFirst();
         ArrayList<DictionaryModel> arrayList = new ArrayList<>();
         DictionaryModel dictionaryModel;
+
+        Cursor cursor = queryAllData(isENtoID);
+        cursor.moveToFirst();
         if (cursor.getCount() > 0) {
             do {
                 dictionaryModel = new DictionaryModel();
                 dictionaryModel.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DbContract.DictionaryColumns.COL_ID)));
                 dictionaryModel.setKeyword(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.DictionaryColumns.COL_KEYWORD)));
-                dictionaryModel.setKeyword(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.DictionaryColumns.COL_VALUE)));
-
+                dictionaryModel.setValue(cursor.getString(cursor.getColumnIndexOrThrow(DbContract.DictionaryColumns.COL_VALUE)));
 
                 arrayList.add(dictionaryModel);
                 cursor.moveToNext();
-
 
             } while (!cursor.isAfterLast());
         }
@@ -88,15 +79,17 @@ public class DictionaryHelper {
         return arrayList;
     }
 
+    public Cursor queryAllData(boolean isENtoID) {
+        String TABLE_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
+        return sqLiteDatabase.rawQuery("SELECT * FROM " + TABLE_NAME + " ORDER BY " + DbContract.DictionaryColumns.COL_ID + " ASC", null);
+    }
+
     public long insert(DictionaryModel dictionaryModel, boolean isENtoID) {
-        String DB_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
+        String TABLE_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
         ContentValues initialValues = new ContentValues();
         initialValues.put(DbContract.DictionaryColumns.COL_KEYWORD, dictionaryModel.getKeyword());
         initialValues.put(DbContract.DictionaryColumns.COL_VALUE, dictionaryModel.getValue());
-//        if(isENtoID){
-//            return sqLiteDatabase.insert(DbContract.TABLE_EN_ID, null, initialValues);
-//        }
-        return sqLiteDatabase.insert(DB_NAME, null, initialValues);
+        return sqLiteDatabase.insert(TABLE_NAME, null, initialValues);
     }
 
     public void beginTransaction() {
@@ -112,13 +105,9 @@ public class DictionaryHelper {
     }
 
     public void insertTransaction(ArrayList<DictionaryModel> dictionaryModels, boolean isENtoID) {
-        String DB_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
-        String sql = "INSERT INTO " + DB_NAME + " (" + DbContract.DictionaryColumns.COL_KEYWORD + ", " + DbContract.DictionaryColumns.COL_VALUE
+        String TABLE_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
+        String sql = "INSERT INTO " + TABLE_NAME + " (" + DbContract.DictionaryColumns.COL_KEYWORD + ", " + DbContract.DictionaryColumns.COL_VALUE
                 + ") VALUES (?, ?)";
-//        if(isENtoID){
-//            sql = "INSERT INTO "+DbContract.TABLE_EN_ID+" ("+DbContract.DictionaryColumns.COL_KEYWORD+", "+DbContract.DictionaryColumns.COL_VALUE
-//                    +") VALUES (?, ?)";
-//        }
         beginTransaction();
 
         SQLiteStatement stmt = sqLiteDatabase.compileStatement(sql);
@@ -134,22 +123,16 @@ public class DictionaryHelper {
     }
 
     public int update(DictionaryModel dictionaryModel, boolean isENtoID) {
-        String DB_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
+        String TABLE_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
         ContentValues args = new ContentValues();
         args.put(DbContract.DictionaryColumns.COL_KEYWORD, dictionaryModel.getKeyword());
         args.put(DbContract.DictionaryColumns.COL_VALUE, dictionaryModel.getValue());
-//        if (isENtoID) {
-//            return sqLiteDatabase.update(DbContract.TABLE_EN_ID, args, DbContract.DictionaryColumns.COL_ID + "= '" + dictionaryModel.getId() + "'", null);
-//        }
-        return sqLiteDatabase.update(DB_NAME, args, DbContract.DictionaryColumns.COL_ID + "= '" + dictionaryModel.getId() + "'", null);
+        return sqLiteDatabase.update(TABLE_NAME, args, DbContract.DictionaryColumns.COL_ID + "= '" + dictionaryModel.getId() + "'", null);
     }
 
 
     public int delete(int id, boolean isENtoID) {
-        String DB_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
-//        if (isENtoID) {
-//            return sqLiteDatabase.delete(DbContract.TABLE_EN_ID, DbContract.DictionaryColumns.COL_ID + " = '" + id + "'", null);
-//        }
-        return sqLiteDatabase.delete(DB_NAME, DbContract.DictionaryColumns.COL_ID + " = '" + id + "'", null);
+        String TABLE_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
+        return sqLiteDatabase.delete(TABLE_NAME, DbContract.DictionaryColumns.COL_ID + " = '" + id + "'", null);
     }
 }

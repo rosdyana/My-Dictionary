@@ -15,4 +15,6 @@
     <string name="keyword_not_found">%1$s not found.</string>
     <string name="dialog_about_content">Author : Rosdyana Kusuma</string>
     <string name="dialog_about_title">About</string>
+    <string name="empty_keyword">Empty vocabulary, please translate first</string>
+    <string name="share">Share</string>
 </resources>

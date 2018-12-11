@@ -4,13 +4,14 @@
 
 package mydictionary.sleepybear.com.mydictionary;
 
+import android.content.Intent;
 import android.database.SQLException;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -19,7 +20,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.widget.TextView;
+
 
 import com.mancj.materialsearchbar.MaterialSearchBar;
 
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import mydictionary.sleepybear.com.mydictionary.adapter.TranslateAdapter;
 import mydictionary.sleepybear.com.mydictionary.db.DictionaryHelper;
 import mydictionary.sleepybear.com.mydictionary.model.DictionaryModel;
 import mydictionary.sleepybear.com.mydictionary.utils.AppPreference;
@@ -36,6 +39,7 @@ public class HomeActivity extends AppCompatActivity
     private AppPreference appPreference;
     private DictionaryHelper dictionaryHelper;
     private ArrayList<DictionaryModel> dictionaryList = new ArrayList<>();
+    private TranslateAdapter translateAdapter;
 
     @BindView(R.id.searchBar)
     MaterialSearchBar searchBar;
@@ -45,6 +49,10 @@ public class HomeActivity extends AppCompatActivity
     FloatingActionButton fab;
     @BindView(R.id.nav_view)
     NavigationView navigationView;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.not_found_txt)
+    TextView not_found_text;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,18 +60,28 @@ public class HomeActivity extends AppCompatActivity
         setContentView(R.layout.activity_home);
         ButterKnife.bind(this);
 
-
+        fab.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+        fab.setBackgroundDrawable(getDrawable(R.drawable.header_gradient_color));
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                if (dictionaryList.size() >= 1) {
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.setType("text/plain");
+                    intent.putExtra(Intent.EXTRA_TEXT, dictionaryList.get(0).getKeyword() + "\n\n" + dictionaryList.get(0).getValue());
+                    startActivity(Intent.createChooser(intent, getResources().getString(R.string.share)));
+                } else {
+                    Snackbar.make(view, getString(R.string.empty_keyword), Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+
             }
         });
 
 
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.getMenu().getItem(0).setChecked(true);
+        searchBar.setPlaceHolder(getString(R.string.id_to_en_text));
 
         // ID to EN item
         appPreference = new AppPreference(this);
@@ -71,24 +89,13 @@ public class HomeActivity extends AppCompatActivity
 
         searchBar.setOnSearchActionListener(this);
         searchBar.setCardViewElevation(10);
-        searchBar.addTextChangeListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d("LOG_TAG", getClass().getSimpleName() + " text changed " + searchBar.getText());
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-
-        });
+        searchBar.hideSuggestionsList();
 
         dictionaryHelper = new DictionaryHelper(this);
+
+        translateAdapter = new TranslateAdapter();
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(translateAdapter);
     }
 
     @Override
@@ -96,6 +103,7 @@ public class HomeActivity extends AppCompatActivity
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
+            searchBar.disableSearch();
             super.onBackPressed();
         }
     }
@@ -108,8 +116,10 @@ public class HomeActivity extends AppCompatActivity
 
         if (id == R.id.en_to_id_item) {
             appPreference.setENtoID(true);
+            searchBar.setPlaceHolder(getString(R.string.en_to_id_text));
         } else if (id == R.id.id_to_en_item) {
             appPreference.setENtoID(false);
+            searchBar.setPlaceHolder(getString(R.string.id_to_en_text));
         } else if (id == R.id.nav_about) {
             AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
             builder.setMessage(R.string.dialog_about_content)
@@ -130,7 +140,7 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onSearchConfirmed(CharSequence text) {
-        Log.d("ROS", String.valueOf(text));
+//        Log.d("ROS", String.valueOf(text));
         searchWord(String.valueOf(text));
         searchBar.disableSearch();
     }
@@ -139,18 +149,20 @@ public class HomeActivity extends AppCompatActivity
         try {
             dictionaryHelper.open();
             dictionaryList = dictionaryHelper.getValueByKeyword(text, appPreference.isENToID());
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             dictionaryHelper.close();
         }
-        if(dictionaryList.size()>=1){
-            Log.d("ROS",dictionaryList.get(0).getValue());
-            Toast.makeText(HomeActivity.this,dictionaryList.get(0).getValue() ,Toast.LENGTH_SHORT).show();
+        if (dictionaryList.size() >= 1) {
+            not_found_text.setVisibility(View.GONE);
+//            Log.d("ROS", dictionaryList.get(0).getValue());
+            translateAdapter.updateData(dictionaryList);
         } else {
-            Toast.makeText(HomeActivity.this, getResources().getString(R.string.keyword_not_found, text),Toast.LENGTH_SHORT).show();
+            not_found_text.setVisibility(View.VISIBLE);
+            not_found_text.setText(getResources().getString(R.string.keyword_not_found, text));
+            translateAdapter.clear();
         }
-
     }
 
     @Override

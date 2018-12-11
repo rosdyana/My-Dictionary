@@ -58,7 +58,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         protected Void doInBackground(Void... voids) {
             boolean isFirstRun = appPreference.isFirstRun();
 
-            if(isFirstRun){
+            if (isFirstRun) {
                 ArrayList<DictionaryModel> dictionaryENtoID = preLoadRaw(R.raw.english_indonesia);
                 ArrayList<DictionaryModel> dictionaryIDtoEN = preLoadRaw(R.raw.indonesia_english);
 
@@ -66,7 +66,7 @@ public class SplashScreenActivity extends AppCompatActivity {
                 progress = 50;
                 publishProgress((int) progress);
                 Double progressMaxInsert = 50.0;
-                Double progressDiff = (progressMaxInsert - progress) / (dictionaryENtoID.size()+dictionaryIDtoEN.size());
+                Double progressDiff = (progressMaxInsert - progress) / (dictionaryENtoID.size() + dictionaryIDtoEN.size());
 
                 dictionaryHelper.insertTransaction(dictionaryENtoID, true);
                 progress += progressDiff;
@@ -94,6 +94,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             }
             return null;
         }
+
         @Override
         protected void onProgressUpdate(Integer... values) {
             progressBar.setProgress(values[0]);

@@ -51,7 +51,7 @@ public class DictionaryModel implements Parcelable {
     public DictionaryModel() {
     }
 
-    public DictionaryModel(String keyword, String value){
+    public DictionaryModel(String keyword, String value) {
         this.keyword = keyword;
         this.value = value;
     }
