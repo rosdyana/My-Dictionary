@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private static String DB_NAME = "dictionarydb";
+    private static String DB_NAME = "dictionary.db";
 
     private static final int DB_VERSION = 1;
 

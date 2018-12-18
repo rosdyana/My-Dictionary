@@ -106,7 +106,8 @@ public class DictionaryHelper {
 
     public void insertTransaction(ArrayList<DictionaryModel> dictionaryModels, boolean isENtoID) {
         String TABLE_NAME = isENtoID ? DbContract.TABLE_EN_ID : DbContract.TABLE_ID_EN;
-        String sql = "INSERT INTO " + TABLE_NAME + " (" + DbContract.DictionaryColumns.COL_KEYWORD + ", " + DbContract.DictionaryColumns.COL_VALUE
+        String sql = "INSERT INTO " + TABLE_NAME + " (" + DbContract.DictionaryColumns.COL_KEYWORD + ", "
+                + DbContract.DictionaryColumns.COL_VALUE
                 + ") VALUES (?, ?)";
         beginTransaction();
 

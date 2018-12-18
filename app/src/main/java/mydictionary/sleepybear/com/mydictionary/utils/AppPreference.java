@@ -23,7 +23,7 @@ public class AppPreference {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         String key = context.getResources().getString(R.string.app_first_run);
         editor.putBoolean(key, isFirstRun);
-        editor.commit();
+        editor.apply();
     }
 
     public Boolean isFirstRun() {
@@ -35,7 +35,7 @@ public class AppPreference {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         String key = context.getResources().getString(R.string.is_en_to_id);
         editor.putBoolean(key, isENtoID);
-        editor.commit();
+        editor.apply();
     }
 
     public Boolean isENToID() {
